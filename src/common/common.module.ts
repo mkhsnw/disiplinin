@@ -4,8 +4,9 @@ import { WinstonModule } from 'nest-winston';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 import { ValidationService } from './validation.service';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ErrorFilter } from './error.filter';
+import { ResponseSuccessInterceptor } from '../models/interceptor.model';
 @Global()
 @Module({
   imports: [
@@ -46,6 +47,10 @@ import { ErrorFilter } from './error.filter';
     {
       provide: APP_FILTER,
       useClass: ErrorFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseSuccessInterceptor,
     },
   ],
   exports: [PrismaService, ValidationService],
