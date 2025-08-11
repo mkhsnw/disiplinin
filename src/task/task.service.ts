@@ -190,7 +190,6 @@ export class TaskService {
       }
 
       if (req.search) {
-        // Fix: Remove mode for MySQL compatibility
         whereConditions.OR = [
           { title: { contains: req.search } },
           { description: { contains: req.search } },
@@ -464,7 +463,6 @@ export class TaskService {
     }
   }
 
-  // Fix: Async/await issue
   async updateTaskStatus(id: string, status: string) {
     try {
       const validatedStatus = this.validationService.validate(
@@ -541,7 +539,6 @@ export class TaskService {
     }
   }
 
-  // Fix: Actually implement overdue logic
   async getOverdueTasks(query: TaskListRequest) {
     try {
       const page = parseInt(String(query.page || 1));
