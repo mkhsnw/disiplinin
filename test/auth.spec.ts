@@ -239,7 +239,6 @@ describe('AUTH TEST', () => {
       // Check accessToken format (JWT has 3 parts separated by dots)
       const accessTokenParts = response.body.data.accessToken.split('.');
       expect(accessTokenParts).toHaveLength(3);
-
     });
   });
 
