@@ -1,23 +1,10 @@
-export class LoginRequest {
-  email: string;
-  password: string;
-}
-
-export class UserResponse {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  createdAt?: Date;
-}
-
-export class LoginResponse {
-  accessToken: string;
-  user: UserResponse;
-}
-
 export class RegisterRequest {
+  name: string;
   email: string;
   password: string;
-  name: string;
+}
+
+export class LoginRequest {
+  email: string;  
+  password: string;
 }

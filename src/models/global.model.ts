@@ -9,13 +9,11 @@ import { map, Observable } from 'rxjs';
 export class ApiSuccessResponse<T> {
   success: boolean;
   data: T;
-  meta: ApiMeta;
 }
 
 export class ApiErrorResponse {
   success: boolean;
   error: ApiErrorMessage;
-  meta: ApiMeta;
 }
 
 export class ApiErrorMessage {
@@ -23,8 +21,3 @@ export class ApiErrorMessage {
   message: string;
 }
 
-export class ApiMeta {
-  timestamp: string;
-  path: any;
-  method: any;
-}

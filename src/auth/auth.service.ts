@@ -18,133 +18,88 @@ export class AuthService {
   ) {}
 
   async register(req: RegisterRequest) {
-    this.logger.info('Registering user', { email: req.email });
-
-    const userRequest: RegisterRequest = this.validationService.validate(
+    const registerRequest: RegisterRequest = this.validationService.validate(
       AuthValidation.REGISTER,
       req,
     );
 
-    const user = await this.prismaService.user.findUnique({
+    const existingUser = await this.prismaService.user.findUnique({
       where: {
-        email: userRequest.email,
+        email: registerRequest.email,
+      },
+      select: {
+        id: true,
       },
     });
 
-    if (user) {
-      this.logger.warn('User already exists', { email: userRequest.email });
-      throw new HttpException('Email or password is incorrect', 400);
+    if (existingUser) {
+      throw new HttpException('User already exists', 400);
     }
 
-    const hashedPassword = await bcrypt.hash(userRequest.password, 10);
+    const hashedPassword = await bcrypt.hash(registerRequest.password, 10);
 
-    const newUser = this.prismaService.user.create({
+    const newUser = await this.prismaService.user.create({
       data: {
-        name: userRequest.name,
-        email: userRequest.email,
+        email: registerRequest.email,
+        name: registerRequest.name,
         password: hashedPassword,
       },
       select: {
         id: true,
         email: true,
         name: true,
-        role: true,
         createdAt: true,
       },
     });
 
-    this.logger.info('User registered successfully', {
-      email: userRequest.email,
-    });
-
-    return newUser;
+    return {
+      success: true,
+      data: newUser,
+    };
   }
 
   async login(req: LoginRequest) {
-    this.logger.info('Login User', { email: req.email });
+    try {
+      const loginRequest: LoginRequest = await this.validationService.validate(
+        AuthValidation.LOGIN,
+        req,
+      );
 
-    const loginRequest: LoginRequest = this.validationService.validate(
-      AuthValidation.LOGIN,
-      req,
-    );
-
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        email: loginRequest.email,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        password: true,
-      },
-    });
-
-    if (!user) {
-      throw new HttpException('Email or password is incorrect', 401);
-    }
-
-    const isPasswordValid = await bcrypt.compare(
-      loginRequest.password,
-      user.password,
-    );
-
-    if (!isPasswordValid) {
-      this.logger.warn('Invalid password attempt', {
-        email: loginRequest.email,
+      const existingUser = await this.prismaService.user.findUnique({
+        where: {
+          email: loginRequest.email,
+        },
       });
-      throw new HttpException('Email or password is incorrect', 401);
+
+      if (!existingUser) {
+        throw new HttpException('Invalid email or password', 400);
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        loginRequest.password,
+        existingUser.password,
+      );
+      if (!isPasswordValid) {
+        throw new HttpException('Invalid email or password', 400);
+      }
+
+      const token = this.jwtService.sign({
+        email: existingUser.email,
+        id: existingUser.id,
+      });
+
+      const { password, ...withoutPassword } = existingUser;
+
+      return {
+        success: true,
+        data: {
+          ...withoutPassword,
+          token,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Login failed', error);
+      throw new HttpException('Login failed', 500);
     }
-
-    const payload = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    };
-
-    const token = this.jwtService.sign(payload);
-
-    return {
-      accessToken: token,
-      user: payload,
-    };
-  }
-
-  async refreshToken(token: string) {
-    const payload = this.jwtService.verify(token);
-
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        id: payload.id,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        avatar: true,
-      },
-    });
-
-    if (!user) {
-      this.logger.warn('Invalid refresh token attempt', { token });
-      throw new HttpException('Invalid token', 401);
-    }
-
-    const newPayload = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      avatar: user.avatar,
-    };
-
-    const newAccessToken = this.jwtService.sign(newPayload);
-    return {
-      accessToken: newAccessToken,
-      user: newPayload,
-    };
   }
 }

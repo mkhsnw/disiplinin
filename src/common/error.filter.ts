@@ -13,23 +13,14 @@ export class ErrorFilter {
           code: status,
           message: exception.getResponse(),
         },
-        meta: {
-          timestamp: new Date().toISOString(),
-          path: host.switchToHttp().getRequest().url,
-          method: host.switchToHttp().getRequest().method,
-        },
       });
     } else if (exception instanceof ZodError) {
+      const errors = exception.issues;
       response.status(400).json({
         success: false,
         error: {
-          code: 'ZOD_VALIDATION_ERROR',
-          message: 'Validation failed',
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          path: host.switchToHttp().getRequest().url,
-          method: host.switchToHttp().getRequest().method,
+          code: '400',
+          message: errors.map((issue) => issue.message).join(', '),
         },
       });
     }

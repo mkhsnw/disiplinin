@@ -23,11 +23,6 @@ export class ResponseSuccessInterceptor<T>
       map((data) => ({
         success: true,
         data,
-        meta: {
-          timestamp: new Date().toISOString(),
-          path: request.url,
-          method: request.method,
-        },
       })),
     );
   }
