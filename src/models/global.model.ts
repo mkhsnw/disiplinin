@@ -1,11 +1,3 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
-import { map, Observable } from 'rxjs';
-
 export class ApiSuccessResponse<T> {
   success: boolean;
   data: T;
@@ -19,5 +11,10 @@ export class ApiErrorResponse {
 export class ApiErrorMessage {
   code: string;
   message: string;
+}
+
+export class QueryRequest {
+  page: number;
+  limit: number;
 }
 
